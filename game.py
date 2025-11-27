@@ -35,9 +35,20 @@ with st.sidebar:
     st.header("🎮 控制面板")
 
     # 获取 API Key (为了安全，建议让用户输入，或者你自己在代码里写死)
-    api_key = st.text_input("请输入大模型 API Key", type="password", placeholder="sk-...")
-    base_url = st.text_input("API Base URL (可选)", value="https://api.openai.com/v1",
-                             help="如果你用的是第三方模型(如DeepSeek/Kimi)，请修改这里")
+    # --- 修改后的代码：优先读取云端配置的 Key，如果没有再让用户输入 ---
+with st.sidebar:
+    st.header("🎮 控制面板")
+    
+    # 尝试从 Secrets 读取 Key (用于云端部署)
+    if "OPENAI_API_KEY" in st.secrets:
+        api_key = st.secrets["OPENAI_API_KEY"]
+        # 如果 secrets 里配置了 url 就用配置的，否则默认
+        base_url = st.secrets.get("OPENAI_BASE_URL", "https://api.openai.com/v1")
+        st.success("✅ 已连接教师提供的 AI 引擎")
+    else:
+        # 本地运行时让用户输入
+        api_key = st.text_input("请输入大模型 API Key", type="password")
+        base_url = st.text_input("Base URL", value="https://api.openai.com/v1")
 
     st.divider()
 
@@ -121,4 +132,5 @@ if prompt := st.chat_input("做出你的决策 (输入 A/B/C)"):
                 st.session_state.money += 50
 
             st.session_state.turn += 1
+
             st.rerun()  # 刷新页面以更新侧边栏数值
